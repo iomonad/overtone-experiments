@@ -1,6 +1,6 @@
-(ns iotrosa.core)
+(ns iotrosa.core
+  (:use [overtone.live]))
 
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
+(comment
+  "Prepare environ for scratch
+  sessions")
