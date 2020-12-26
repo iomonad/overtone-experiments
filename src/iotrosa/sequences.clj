@@ -1,27 +1,42 @@
 (ns iotrosa.sequences
-  (:use [overtone.live])
-  (:require [leipzig.live :as live]
-            [leipzig.melody :refer :all]
-            [leipzig.temperament :as temperament]
-            [leipzig.scale :as scale]))
+  (:use [overtone.live]
+        [overtone.synth.retro]))
 
-(def da-funk
-  (->> (phrase [2 1/2 1/2 1/2 2.5 1/2 1/2 1/2 2.5 1/2 1/2 1/2 2.5 1 1]
-               [0 -1 0 2 -3 -4 -3 -1 -5 -6 -5 -3 -7 -6 -5])
-       (where :pitch (comp scale/G scale/minor))
-       (all :part :da-funk)
-       (all :amp 1)))
+(def metro (metronome 160))
 
-(definst da-funk [freq 440 dur 1.0 amp 1.0]
-  (let [env (env-gen (adsr 0.3 0.7 0.5 0.3)
-	             (line:kr 1.0 0.0 dur) :action FREE)
-        osc (saw freq)]
-    (-> osc (* env amp) pan2)))
+(definst kick []
+  (let [src (sin-osc 80)
+        env (env-gen (perc 0.001 0.3) :action FREE)]
+    (* 0.7 src env)))
 
-(defmethod live/play-note :da-funk [{hertz :pitch seconds :duration amp :amp}]
-  (when hertz (da-funk :freq hertz :dur seconds :amp (or amp 1))))
+(defn player [beat notes]
+  (let [notes (if (empty? notes)
+                [50 55 23]
+                notes)]
+    (at (metro beat)
+        (kick))
+    (at (metro beat)
+        (if (zero? (mod beat 5))
+          (overpad (+ 24 (choose notes)) 0.2 0.75 0.005)))
+    (at (metro (+ 0.5 beat))
+        (if (zero? (mod beat 6))
+          (overpad (+ 12 (choose notes)) 0.5 0.15 0.1)
+          (overpad (choose notes) 0.5 0.15 0.1)))
+  (apply-by (metro (inc beat)) #'player (inc beat) (next notes) [])))
 
-(->> da-funk
-     (wherevqer :pitch, :pitch temperament/equal)
-     (tempo (bpm 110))
-     live/play)
+(player (metro) [])
+
+;;;
+
+(defn play-notes [t beat-dur notes attacks]
+  (when notes
+    (let [note      (+ 12 (first notes))
+          attack    (first attacks)
+          amp       0.5
+          release   0.1
+          next-beat (+ t beat-dur)]
+      (at t (tb-303 note :amp amp))
+      (apply-by next-beat #'play-notes next-beat beat-dur (next notes) (next attacks) []))))
+
+(play-notes (now) 425 (cycle [40 42 44 45 47 49 51 52]) (repeat 0.4))
+(stop)

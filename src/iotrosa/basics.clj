@@ -37,4 +37,39 @@
           :action FREE
           :out-bus 1))
 
+(defsynth foo [freq 200 dur 0.5]
+  (let [src (saw [freq (* freq 1.01) (* 0.99 freq)])
+        low (sin-osc (/ freq 2))
+        filt (lpf src (line:kr (* 10 freq) freq 10))
+        env (env-gen (perc 0.1 dur) :action FREE)]
+    (out 0 (pan2 (* 0.8 low env filt)))))
+
+(defn foo-timed
+  []
+  (let [n (now)]
+    (dotimes [i 10]
+      (at (+ n (* i 500))
+          (foo (* i 220) 1)))))
+
+(definst overpad [note 60 amp 0.7 attack 0.001 release 2]
+  (let [freq  (midicps note)
+        env   (env-gen (perc attack release) :action FREE)
+        f-env (+ freq (* 3 freq (env-gen (perc 0.012 (- release 0.1)))))
+        bfreq (/ freq 2)
+        sig   (apply +
+                     (concat (* 0.7 (sin-osc [bfreq (* 0.99 bfreq)]))
+                             (lpf (saw [freq (* freq 1.01)]) f-env)))]
+    (* amp env sig)))
+
+
+(defn overpad-timed
+  []
+  (let [n (now)]
+    (dotimes [i 10]
+      (at (+ n (* i 500))
+          (overpad (* i 220))))))
+
+
+(overpad-timed 60)
+
 (stop-all)
