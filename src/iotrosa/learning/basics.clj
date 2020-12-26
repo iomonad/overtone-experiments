@@ -1,4 +1,4 @@
-(ns iotrosa.basics
+(ns iotrosa.learning.basics
   (:use [overtone.live]
         [overtone.synth.retro]))
 
@@ -28,14 +28,13 @@
                 0.3)
              (apply + (pulse [80 81]))))))
 
-(doseq [note (range 20 40 2)]
-  (tb-303 200
-          :gate 2
-          :cutoff 4
-          :note note
-          :amp 50
-          :action FREE
-          :out-bus 1))
+(tb-303 200
+        :gate 4
+        :cutoff 4
+        :note 40
+        :amp 50
+        :action FREE
+        :out-bus 1)
 
 (defsynth foo [freq 200 dur 0.5]
   (let [src (saw [freq (* freq 1.01) (* 0.99 freq)])

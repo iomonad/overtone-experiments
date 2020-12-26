@@ -1,4 +1,4 @@
-(ns iotrosa.sequences
+(ns iotrosa.learning.sequences
   (:use [overtone.live]
         [overtone.synth.retro]))
 
@@ -8,6 +8,8 @@
   (let [src (sin-osc 80)
         env (env-gen (perc 0.001 0.3) :action FREE)]
     (* 0.7 src env)))
+
+(kick)
 
 (defn player [beat notes]
   (let [notes (if (empty? notes)
@@ -35,8 +37,19 @@
           amp       0.5
           release   0.1
           next-beat (+ t beat-dur)]
-      (at t (tb-303 note :amp amp))
+      (at t (tb-303 200 :note note :cutoff 4 :note note :amp 50 :action FREE :out-bus 1))
       (apply-by next-beat #'play-notes next-beat beat-dur (next notes) (next attacks) []))))
 
-(play-notes (now) 425 (cycle [40 42 44 45 47 49 51 52]) (repeat 0.4))
-(stop)
+(play-notes (now) 425 (cycle [20]) (repeat 0.4))
+
+(def kick-d (freesound 41155))
+
+(stop-all)
+
+(definst trancy-waves []
+  (* 0.2
+     (+ (sin-osc 200) (saw 200) (saw 203) (sin-osc 400))))
+
+(demo 10 (bpf (* [0.5 0.5] (pink-noise))
+              (mouse-y 10 10000)
+              (mouse-x 0.0001 0.9999)))
